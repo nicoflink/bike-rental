@@ -1,11 +1,11 @@
 package memory
 
 import (
-	"errors"
+	"context"
+	"fmt"
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/nicoflink/bike-rental/pkg/geo"
 	"github.com/nicoflink/bike-rental/pkg/list"
 	"github.com/nicoflink/bike-rental/pkg/rent"
 )
@@ -39,76 +39,71 @@ func WithSampleBikes(bikes []Bike) RepositoryOption {
 	}
 }
 
-func (r *Repository) GetAllBikes(userID uuid.UUID) ([]list.Bike, error) {
+func (r *Repository) GetAllBikes(_ context.Context, userID uuid.UUID) ([]list.Bike, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 
 	bikes := make([]list.Bike, 0, len(r.bikes))
 
 	for _, b := range r.bikes {
-		var rentedByUser bool
-		var rented bool
-
-		if b.RentedByUser != nil {
-			rented = true
-
-			if *b.RentedByUser == userID {
-				rentedByUser = true
-			}
-		}
-
-		vBike := list.Bike{
-			ID:   b.ID,
-			Name: b.Name,
-			Location: geo.Coordinates{
-				Lat: b.Location.Lat,
-				Lng: b.Location.Lng,
-			},
-			Rented:       rented,
-			RentedByUser: rentedByUser,
-		}
-
-		bikes = append(bikes, vBike)
+		bikes = append(bikes, mapBikeToListBike(b, userID))
 	}
 
 	return bikes, nil
 }
 
-func (r *Repository) CreateRent(ren rent.Rent) (rent.Rent, error) {
-	r.lock.Lock()
-	defer r.lock.Unlock()
+func (r *Repository) GetBikeByID(_ context.Context, bikeID uuid.UUID) (rent.Bike, error) {
+	const prefix = "memory.Repository.GetBikeByID"
 
-	r.rentals[ren.ID] = ren
-
-	return ren, nil
-}
-
-func (r *Repository) UpdateRent(ren rent.Rent) (rent.Rent, error) {
-	r.lock.Lock()
-	defer r.lock.Unlock()
-
-	r.rentals[ren.ID] = ren
-
-	return ren, nil
-}
-
-func (r *Repository) getBikeByID(bikeID uuid.UUID) (Bike, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 
 	b, ok := r.bikes[bikeID]
 	if !ok {
-		return Bike{}, errors.New("missing ressource")
+		return rent.Bike{}, fmt.Errorf("%s : missing ressource", prefix)
 	}
 
-	return b, nil
+	return mapBikeToRentBike(b), nil
 }
 
-func (r *Repository) updateBike(bike Bike) (Bike, error) {
+func (r *Repository) CreateRentAndUpdateBike(_ context.Context, ren rent.Rent, b rent.Bike) (rent.Rent, error) {
+	const prefix = "memory.Repository.CreateRentAndUpdateBike"
+
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
-	r.bikes[bike.ID] = bike
+	r.rentals[ren.ID] = ren
 
-	return bike, nil
+	bike, ok := r.bikes[b.ID]
+	if !ok {
+		return rent.Rent{}, fmt.Errorf("%s : Unable to find bike to be updated", prefix)
+	}
+
+	bike.Location = b.Location
+	bike.RentedByUser = b.RentedBy
+
+	r.bikes[b.ID] = bike
+
+	return ren, nil
+}
+
+func (r *Repository) UpdateRentAndUpdateBike(_ context.Context, ren rent.Rent, b rent.Bike) (rent.Rent, error) {
+	const prefix = "memory.Repository.UpdateRentAndUpdateBike"
+
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
+	r.rentals[ren.ID] = ren
+
+	bike, ok := r.bikes[b.ID]
+	if !ok {
+		return rent.Rent{}, fmt.Errorf("%s : Unable to find bike to be updated", prefix)
+	}
+
+	bike.Location = b.Location
+	bike.RentedByUser = b.RentedBy
+
+	r.bikes[b.ID] = bike
+
+	return ren, nil
 }

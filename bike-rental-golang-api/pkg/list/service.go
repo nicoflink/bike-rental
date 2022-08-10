@@ -7,7 +7,7 @@ import (
 )
 
 type Repository interface {
-	GetAllBikes(userID uuid.UUID) ([]Bike, error)
+	GetAllBikes(ctx context.Context, userID uuid.UUID) ([]Bike, error)
 }
 
 type Service struct {
@@ -18,6 +18,6 @@ func NewService(r Repository) *Service {
 	return &Service{repository: r}
 }
 
-func (s Service) GetAllBikes(context context.Context) ([]Bike, error) {
-	return s.repository.GetAllBikes(uuid.New())
+func (s Service) GetAllBikes(ctx context.Context, userID uuid.UUID) ([]Bike, error) {
+	return s.repository.GetAllBikes(ctx, userID)
 }

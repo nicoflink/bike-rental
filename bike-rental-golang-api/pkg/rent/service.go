@@ -1,7 +1,7 @@
 package rent
 
 import (
-	"errors"
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -9,11 +9,10 @@ import (
 )
 
 type Repository interface {
-	GetBikeByID(bikeID uuid.UUID) (Bike, error)
-	UpdateBike(bike Bike) (Bike, error)
-	GetRentByID(RentID uuid.UUID) (Rent, error)
-	CreateRent(Rent Rent) (ren Rent, err error)
-	UpdateRent(Rent Rent) (Rent, error)
+	GetBikeByID(context.Context, uuid.UUID) (Bike, error)
+	GetRentByID(context.Context, uuid.UUID) (Rent, error)
+	CreateRentAndUpdateBike(context.Context, Rent, Bike) (Rent, error)
+	UpdateRentAndUpdateBike(context.Context, Rent, Bike) (Rent, error)
 }
 
 type Service struct {
@@ -24,56 +23,48 @@ func NewService(r Repository) *Service {
 	return &Service{repository: r}
 }
 
-func (s Service) StartRent(userID uuid.UUID, bikeID uuid.UUID) (Rent, error) {
-	bike, err := s.repository.GetBikeByID(bikeID)
+func (s Service) StartRent(ctx context.Context, userID uuid.UUID, bikeID uuid.UUID) (Rent, error) {
+	const prefix = "rent.Service.StartRent"
+
+	bike, err := s.repository.GetBikeByID(ctx, bikeID)
 	if err != nil {
-		return Rent{}, fmt.Errorf("rent.Service.StartRent: Unable to get bike: %w", err)
+		return Rent{}, fmt.Errorf("%s: Unable to get bike: %w", prefix, err)
 	}
 
 	if bike.RentedBy != nil {
-		return Rent{}, errors.New("rent.Service.StartRent: Bike is already rented")
+		return Rent{}, fmt.Errorf("%s: Bike is already rented", prefix)
 	}
 
 	r := NewRent(bikeID, userID, bike.Location)
-
-	rCreated, err := s.repository.CreateRent(*r)
-	if err != nil {
-		return Rent{}, fmt.Errorf("rent.Service.StartRent: Unable to create rent: %w", err)
-	}
-
 	bike.RentedBy = &userID
 
-	_, err = s.repository.UpdateBike(bike)
+	rCreated, err := s.repository.CreateRentAndUpdateBike(ctx, *r, bike)
 	if err != nil {
-		return Rent{}, fmt.Errorf("rent.Service.StartRent: Unable to update bike: %w", err)
+		return Rent{}, fmt.Errorf("rent.Service.CreateRentAndUpdateBike: %w", err)
 	}
 
 	return rCreated, nil
 }
 
-func (s Service) StopRent(RentID uuid.UUID, endLocation geo.Coordinates) (Rent, error) {
-	ren, err := s.repository.GetRentByID(RentID)
+func (s Service) StopRent(ctx context.Context, RentID uuid.UUID, endLocation geo.Coordinates) (Rent, error) {
+	const prefix = "rent.Service.StopRent"
+
+	ren, err := s.repository.GetRentByID(ctx, RentID)
 	if err != nil {
-		return Rent{}, fmt.Errorf("rent.Service.StopRent: get Rent with ID %s : %w", RentID.String(), err)
+		return Rent{}, fmt.Errorf("%s: get Rent with ID %s : %w", prefix, RentID.String(), err)
+	}
+
+	bike, err := s.repository.GetBikeByID(ctx, ren.Bike)
+	if err != nil {
+		return Rent{}, fmt.Errorf("%s: Unable to get bike: %w", prefix, err)
 	}
 
 	ren.StopRent(endLocation)
-
-	rUpdated, err := s.repository.UpdateRent(ren)
-	if err != nil {
-		return Rent{}, fmt.Errorf("rent.Service.StopRent: update Rent with ID %s : %w", RentID.String(), err)
-	}
-
-	bike, err := s.repository.GetBikeByID(ren.Bike)
-	if err != nil {
-		return Rent{}, fmt.Errorf("rent.Service.StartRent: Unable to get bike: %w", err)
-	}
-
 	bike.removeRenter()
 
-	_, err = s.repository.UpdateBike(bike)
+	rUpdated, err := s.repository.UpdateRentAndUpdateBike(ctx, ren, bike)
 	if err != nil {
-		return Rent{}, fmt.Errorf("rent.Service.StartRent: Unable to update bike: %w", err)
+		return Rent{}, fmt.Errorf("rent.Service.StopRent: update Rent with ID %s : %w", RentID.String(), err)
 	}
 
 	return rUpdated, nil

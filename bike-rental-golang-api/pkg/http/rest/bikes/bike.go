@@ -9,6 +9,6 @@ type BikeResponse struct {
 	ID           string      `json:"id"`
 	Name         string      `json:"name"`
 	Location     Coordinates `json:"location"`
-	Rented       bool        `json:"available"`
+	Rented       bool        `json:"rented"`
 	RentedByUser bool        `json:"returnable"`
 }

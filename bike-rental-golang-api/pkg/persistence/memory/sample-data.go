@@ -27,7 +27,7 @@ var (
 				Lat: 50.11070702389974,
 				Lng: 8.660188011071721,
 			},
-			RentedByUser: uuidToPointer(uuid.New()),
+			RentedByUser: uuidToPointer(uuid.MustParse("10debbdb-1a92-4128-bdb0-cc381ea5585f")),
 		},
 		{
 			ID:   uuid.New(),
@@ -36,7 +36,7 @@ var (
 				Lat: 50.1123635233249,
 				Lng: 8.649741801640113,
 			},
-			RentedByUser: nil,
+			RentedByUser: uuidToPointer(uuid.New()),
 		},
 	}
 )

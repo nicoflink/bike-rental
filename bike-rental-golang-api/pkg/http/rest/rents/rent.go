@@ -6,10 +6,8 @@ type Coordinates struct {
 }
 
 type RentRequest struct {
-	BikeID        string      `json:"bikeID"`
-	Renter        string      `json:"userID"`
-	StartTime     string      `json:"startTime"`
-	StartLocation Coordinates `json:"startLocation"`
+	BikeID string `json:"bikeID"`
+	Renter string `json:"userID"`
 }
 
 type RentResponse struct {

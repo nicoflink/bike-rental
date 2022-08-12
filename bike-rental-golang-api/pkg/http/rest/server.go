@@ -14,6 +14,7 @@ import (
 
 type DomainServices struct {
 	ListService ports.ListService
+	RentService ports.RentService
 }
 
 type httpServer interface {

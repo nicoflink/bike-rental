@@ -9,9 +9,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/nicoflink/bike-rental/pkg/http/rest"
 	"github.com/nicoflink/bike-rental/pkg/list"
 	"github.com/nicoflink/bike-rental/pkg/persistence/memory"
+	"github.com/nicoflink/bike-rental/pkg/rent"
 )
 
 func main() {
@@ -22,12 +24,18 @@ func main() {
 
 	// Init Services
 	listService := list.NewService(memoryRepo)
+	rentService := rent.NewService(memoryRepo)
+
+	validate := validator.New()
 
 	server := rest.NewServer(
 		"localhost",
 		8080,
-		nil,
-		rest.DomainServices{ListService: listService},
+		validate,
+		rest.DomainServices{
+			ListService: listService,
+			RentService: rentService,
+		},
 	)
 
 	serverCtx, serverStop := context.WithCancel(context.Background())

@@ -2,7 +2,9 @@ package rents
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/nicoflink/bike-rental/pkg/geo"
 	"github.com/nicoflink/bike-rental/pkg/rent"
 )
@@ -30,9 +32,16 @@ func mapRentToJsonResponse(r rent.Rent) RentResponse {
 		ID:            r.ID.String(),
 		BikeID:        r.Bike.String(),
 		Renter:        r.Renter.String(),
-		StartTime:     r.StartTime.String(),
+		StartTime:     r.StartTime.Format(time.RFC3339),
 		EndTime:       endTimeString,
 		StartLocation: mapLocationToJson(r.StartLocation),
 		EndLocation:   endLocationString,
+	}
+}
+
+func mapRentRequestToDomain(r RentRequest) rent.Request {
+	return rent.Request{
+		Bike:   uuid.MustParse(r.BikeID),
+		Renter: uuid.MustParse(r.Renter),
 	}
 }

@@ -2,17 +2,20 @@ package rent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/nicoflink/bike-rental/pkg/geo"
+	"github.com/nicoflink/bike-rental/pkg/persistence"
 )
 
 type Repository interface {
-	GetBikeByID(context.Context, uuid.UUID) (Bike, error)
-	GetRentByID(context.Context, uuid.UUID) (Rent, error)
-	CreateRentAndUpdateBike(context.Context, Rent, Bike) (Rent, error)
-	UpdateRentAndUpdateBike(context.Context, Rent, Bike) (Rent, error)
+	GetBikeByID(ctx context.Context, userID uuid.UUID) (Bike, error)
+	GetBikeByUserID(ctx context.Context, userID uuid.UUID) (Bike, error)
+	GetRentByID(ctx context.Context, rentID uuid.UUID) (Rent, error)
+	CreateRentAndUpdateBike(ctx context.Context, r Rent, b Bike) (Rent, error)
+	UpdateRentAndUpdateBike(ctx context.Context, r Rent, b Bike) (Rent, error)
 }
 
 type Service struct {
@@ -23,10 +26,19 @@ func NewService(r Repository) *Service {
 	return &Service{repository: r}
 }
 
-func (s Service) StartRent(ctx context.Context, userID uuid.UUID, bikeID uuid.UUID) (Rent, error) {
+func (s Service) StartRent(ctx context.Context, request Request) (Rent, error) {
 	const prefix = "rent.Service.StartRent"
 
-	bike, err := s.repository.GetBikeByID(ctx, bikeID)
+	_, err := s.repository.GetBikeByUserID(ctx, request.Renter)
+	if !errors.Is(err, persistence.ErrMissingResource) {
+		return Rent{}, fmt.Errorf("%s: Unable to get bike: %w", prefix, err)
+	}
+
+	if err == nil {
+		return Rent{}, fmt.Errorf("%s: User already rented a bike", prefix)
+	}
+
+	bike, err := s.repository.GetBikeByID(ctx, request.Bike)
 	if err != nil {
 		return Rent{}, fmt.Errorf("%s: Unable to get bike: %w", prefix, err)
 	}
@@ -35,12 +47,12 @@ func (s Service) StartRent(ctx context.Context, userID uuid.UUID, bikeID uuid.UU
 		return Rent{}, fmt.Errorf("%s: Bike is already rented", prefix)
 	}
 
-	r := NewRent(bikeID, userID, bike.Location)
-	bike.RentedBy = &userID
+	r := NewRent(request.Bike, request.Renter, bike.Location)
+	bike.RentedBy = &request.Renter
 
 	rCreated, err := s.repository.CreateRentAndUpdateBike(ctx, *r, bike)
 	if err != nil {
-		return Rent{}, fmt.Errorf("rent.Service.CreateRentAndUpdateBike: %w", err)
+		return Rent{}, fmt.Errorf("%s: %w", prefix, err)
 	}
 
 	return rCreated, nil

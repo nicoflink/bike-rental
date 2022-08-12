@@ -17,8 +17,14 @@ type Rent struct {
 	EndLocation   *geo.Coordinates
 }
 
+type Request struct {
+	Bike   uuid.UUID
+	Renter uuid.UUID
+}
+
 func NewRent(bikedID uuid.UUID, renter uuid.UUID, location geo.Coordinates) *Rent {
 	return &Rent{
+		ID:            uuid.New(),
 		Bike:          bikedID,
 		Renter:        renter,
 		StartTime:     time.Now(),

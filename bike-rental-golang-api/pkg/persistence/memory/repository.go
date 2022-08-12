@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nicoflink/bike-rental/pkg/list"
+	"github.com/nicoflink/bike-rental/pkg/persistence"
 	"github.com/nicoflink/bike-rental/pkg/rent"
 )
 
@@ -53,17 +54,40 @@ func (r *Repository) GetAllBikes(_ context.Context, userID uuid.UUID) ([]list.Bi
 }
 
 func (r *Repository) GetBikeByID(_ context.Context, bikeID uuid.UUID) (rent.Bike, error) {
-	const prefix = "memory.Repository.GetBikeByID"
-
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 
 	b, ok := r.bikes[bikeID]
 	if !ok {
-		return rent.Bike{}, fmt.Errorf("%s : missing ressource", prefix)
+		return rent.Bike{}, persistence.ErrMissingResource
 	}
 
 	return mapBikeToRentBike(b), nil
+}
+
+func (r *Repository) GetBikeByUserID(_ context.Context, userID uuid.UUID) (rent.Bike, error) {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
+	for _, b := range r.bikes {
+		if b.RentedByUser != nil && *b.RentedByUser == userID {
+			return rent.Bike{}, nil
+		}
+	}
+
+	return rent.Bike{}, persistence.ErrMissingResource
+}
+
+func (r *Repository) GetRentByID(_ context.Context, rentID uuid.UUID) (rent.Rent, error) {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
+	ren, ok := r.rentals[rentID]
+	if !ok {
+		return rent.Rent{}, persistence.ErrMissingResource
+	}
+
+	return ren, nil
 }
 
 func (r *Repository) CreateRentAndUpdateBike(_ context.Context, ren rent.Rent, b rent.Bike) (rent.Rent, error) {

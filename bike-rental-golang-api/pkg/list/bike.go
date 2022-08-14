@@ -12,3 +12,8 @@ type Bike struct {
 	Rented       bool
 	RentedByUser bool
 }
+
+type BikeLocationUpdate struct {
+	BikeID   uuid.UUID
+	Location geo.Coordinates
+}

@@ -1,8 +1,12 @@
 package bikes
 
 type Coordinates struct {
-	Lat string `json:"latitude"`
-	Lng string `json:"longitude"`
+	Lat float64 `json:"latitude"`
+	Lng float64 `json:"longitude"`
+}
+
+type BikeLocationUpdate struct {
+	Location Coordinates `json:"location"`
 }
 
 type BikeResponse struct {

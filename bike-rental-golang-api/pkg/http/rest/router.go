@@ -15,7 +15,7 @@ func NewV1Router(validator ports.Validator, dServices DomainServices) chi.Router
 	r.Use(chiMiddleware.Logger)
 	r.Use(middleware.UserCtx)
 
-	r.Mount("/bikes", bikes.NewBikesRouter(dServices.ListService))
+	r.Mount("/bikes", bikes.NewBikesRouter(dServices.ListService, validator))
 	r.Mount("/rents", rents.NewRentsRouter(dServices.RentService, validator))
 
 	return r

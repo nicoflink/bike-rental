@@ -30,7 +30,7 @@ func (s Service) StartRent(ctx context.Context, request Request) (Rent, error) {
 	const prefix = "rent.Service.StartRent"
 
 	_, err := s.repository.GetBikeByUserID(ctx, request.Renter)
-	if !errors.Is(err, persistence.ErrMissingResource) {
+	if err != nil && !errors.Is(err, persistence.ErrMissingResource) {
 		return Rent{}, fmt.Errorf("%s: Unable to get bike: %w", prefix, err)
 	}
 

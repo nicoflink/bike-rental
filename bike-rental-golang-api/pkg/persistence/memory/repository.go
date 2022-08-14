@@ -65,17 +65,46 @@ func (r *Repository) GetBikeByID(_ context.Context, bikeID uuid.UUID) (rent.Bike
 	return mapBikeToRentBike(b), nil
 }
 
+func (r *Repository) GetListBikeByID(_ context.Context, userID uuid.UUID, bikeID uuid.UUID) (list.Bike, error) {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
+	b, ok := r.bikes[bikeID]
+	if !ok {
+		return list.Bike{}, persistence.ErrMissingResource
+	}
+
+	return mapBikeToListBike(b, userID), nil
+}
+
 func (r *Repository) GetBikeByUserID(_ context.Context, userID uuid.UUID) (rent.Bike, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 
 	for _, b := range r.bikes {
 		if b.RentedByUser != nil && *b.RentedByUser == userID {
-			return rent.Bike{}, nil
+			return mapBikeToRentBike(b), nil
 		}
 	}
 
 	return rent.Bike{}, persistence.ErrMissingResource
+}
+
+func (r *Repository) UpdateBike(_ context.Context, b list.Bike) (list.Bike, error) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
+	bike, ok := r.bikes[b.ID]
+	if !ok {
+		return list.Bike{}, persistence.ErrMissingResource
+	}
+
+	bike.Name = b.Name
+	bike.Location = b.Location
+
+	r.bikes[b.ID] = bike
+
+	return b, nil
 }
 
 func (r *Repository) GetRentByID(_ context.Context, rentID uuid.UUID) (rent.Rent, error) {

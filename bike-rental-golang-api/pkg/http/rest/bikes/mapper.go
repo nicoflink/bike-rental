@@ -1,8 +1,6 @@
 package bikes
 
 import (
-	"fmt"
-
 	"github.com/nicoflink/bike-rental/pkg/list"
 )
 
@@ -21,8 +19,8 @@ func mapToBikeJsonResponse(bike list.Bike) BikeResponse {
 		ID:   bike.ID.String(),
 		Name: bike.Name,
 		Location: Coordinates{
-			Lat: fmt.Sprintf("%f", bike.Location.Lat),
-			Lng: fmt.Sprintf("%f", bike.Location.Lng),
+			Lat: bike.Location.Lat,
+			Lng: bike.Location.Lng,
 		},
 		Rented:       bike.Rented,
 		RentedByUser: bike.RentedByUser,

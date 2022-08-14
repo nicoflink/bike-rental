@@ -11,6 +11,7 @@ import (
 
 type ListService interface {
 	GetAllBikes(ctx context.Context, userID uuid.UUID) ([]list.Bike, error)
+	UpdateBikePosition(ctx context.Context, userID uuid.UUID, locationUpdate list.BikeLocationUpdate) (list.Bike, error)
 }
 
 type RentService interface {

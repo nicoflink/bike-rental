@@ -16,6 +16,16 @@ func mapLocationToJson(g geo.Coordinates) Coordinates {
 	}
 }
 
+func mapRentsToJsonResponse(r []rent.Rent) []RentResponse {
+	rents := make([]RentResponse, 0, len(r))
+
+	for _, ren := range r {
+		rents = append(rents, mapRentToJsonResponse(ren))
+	}
+
+	return rents
+}
+
 func mapRentToJsonResponse(r rent.Rent) RentResponse {
 	const isoFormat = time.RFC3339
 
@@ -54,4 +64,8 @@ func mapStopRequestToDomain(request StopRequest) rent.StopRequest {
 		UserID: request.UserID,
 		RentID: uuid.MustParse(request.RentID),
 	}
+}
+
+func mapGetRentRequestToDomain(request GetRentRequest) rent.GetOpenRentsRequest {
+	return rent.GetOpenRentsRequest{UserID: uuid.MustParse(request.UserID)}
 }

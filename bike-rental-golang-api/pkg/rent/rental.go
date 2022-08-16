@@ -41,6 +41,10 @@ type StopRequest struct {
 	RentID uuid.UUID
 }
 
+type GetOpenRentsRequest struct {
+	UserID uuid.UUID
+}
+
 func NewRent(bikedID uuid.UUID, renter uuid.UUID, location geo.Coordinates) *Rent {
 	return &Rent{
 		ID:            uuid.New(),

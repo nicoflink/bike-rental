@@ -28,3 +28,8 @@ type RentResponse struct {
 	StartLocation Coordinates `json:"startLocation"`
 	EndLocation   Coordinates `json:"endLocation"`
 }
+
+type GetRentRequest struct {
+	Status string
+	UserID string
+}

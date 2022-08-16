@@ -13,6 +13,7 @@ type Repository interface {
 	GetBikeByID(ctx context.Context, userID uuid.UUID) (Bike, error)
 	GetBikeByUserID(ctx context.Context, userID uuid.UUID) (Bike, error)
 	GetRentByID(ctx context.Context, rentID uuid.UUID) (Rent, error)
+	GetRentByStatusAndRenterID(_ context.Context, status Status, renter uuid.UUID) ([]Rent, error)
 	CreateRentAndUpdateBike(ctx context.Context, r Rent, b Bike) (Rent, error)
 	UpdateRentAndUpdateBike(ctx context.Context, r Rent, b Bike) (Rent, error)
 }
@@ -84,4 +85,8 @@ func (s Service) StopRent(ctx context.Context, stopRequest StopRequest) (Rent, e
 	}
 
 	return rUpdated, nil
+}
+
+func (s Service) GetStartedRents(ctx context.Context, req GetOpenRentsRequest) ([]Rent, error) {
+	return s.repository.GetRentByStatusAndRenterID(ctx, Started, req.UserID)
 }

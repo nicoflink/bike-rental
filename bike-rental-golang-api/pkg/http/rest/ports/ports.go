@@ -16,6 +16,7 @@ type ListService interface {
 type RentService interface {
 	StartRent(ctx context.Context, start rent.StartRequest) (rent.Rent, error)
 	StopRent(ctx context.Context, stop rent.StopRequest) (rent.Rent, error)
+	GetStartedRents(ctx context.Context, req rent.GetOpenRentsRequest) ([]rent.Rent, error)
 }
 
 type Validator interface {

@@ -127,6 +127,21 @@ func (r *Repository) GetRentByID(_ context.Context, rentID uuid.UUID) (rent.Rent
 	return ren, nil
 }
 
+func (r *Repository) GetRentByStatusAndRenterID(_ context.Context, status rent.Status, renter uuid.UUID) ([]rent.Rent, error) {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
+	rents := make([]rent.Rent, 0, 1)
+
+	for _, ren := range r.rentals {
+		if ren.Status == status && ren.Renter == renter {
+			rents = append(rents, ren)
+		}
+	}
+
+	return rents, nil
+}
+
 func (r *Repository) CreateRentAndUpdateBike(_ context.Context, ren rent.Rent, b rent.Bike) (rent.Rent, error) {
 	const prefix = "memory.Repository.CreateRentAndUpdateBike"
 

@@ -24,6 +24,7 @@ func NewRentsRouter(rentService ports.RentService, validator ports.Validator) ch
 		validator: validator,
 	}
 
+	r.Get("/", h.getRents)
 	r.Post("/", h.startRent)
 	r.Patch("/{rentID}", h.stopRent)
 
@@ -111,4 +112,46 @@ func (h handler) stopRent(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	render.Json(writer, mapRentToJsonResponse(res))
+}
+
+func (h handler) getRents(writer http.ResponseWriter, request *http.Request) {
+	ctx := request.Context()
+
+	queryValues := request.URL.Query()
+	if len(queryValues) == 0 {
+		http.Error(writer, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+
+		return
+	}
+
+	status := queryValues.Get("status")
+	userID := queryValues.Get("userID")
+
+	if status == "" || userID == "" {
+		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadGateway)
+
+		return
+	}
+
+	req := GetRentRequest{
+		Status: status,
+		UserID: userID,
+	}
+
+	if err := h.validator.Struct(req); err != nil {
+		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+
+		return
+	}
+
+	domainGetRequest := mapGetRentRequestToDomain(req)
+
+	res, err := h.service.GetStartedRents(ctx, domainGetRequest)
+	if err != nil {
+		http.Error(writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+
+		return
+	}
+
+	render.Json(writer, mapRentsToJsonResponse(res))
 }

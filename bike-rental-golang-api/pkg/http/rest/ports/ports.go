@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/nicoflink/bike-rental/pkg/geo"
 	"github.com/nicoflink/bike-rental/pkg/list"
 	"github.com/nicoflink/bike-rental/pkg/rent"
 )
@@ -15,8 +14,8 @@ type ListService interface {
 }
 
 type RentService interface {
-	StartRent(ctx context.Context, request rent.Request) (rent.Rent, error)
-	StopRent(ctx context.Context, RentID uuid.UUID, endLocation geo.Coordinates) (rent.Rent, error)
+	StartRent(ctx context.Context, start rent.StartRequest) (rent.Rent, error)
+	StopRent(ctx context.Context, stop rent.StopRequest) (rent.Rent, error)
 }
 
 type Validator interface {

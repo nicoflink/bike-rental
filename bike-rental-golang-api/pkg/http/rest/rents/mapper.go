@@ -17,11 +17,13 @@ func mapLocationToJson(g geo.Coordinates) Coordinates {
 }
 
 func mapRentToJsonResponse(r rent.Rent) RentResponse {
+	const isoFormat = time.RFC3339
+
 	var endTimeString string
 	var endLocationString Coordinates
 
 	if r.EndTime != nil {
-		endTimeString = r.EndTime.String()
+		endTimeString = r.EndTime.Format(isoFormat)
 	}
 
 	if r.EndLocation != nil {
@@ -32,16 +34,24 @@ func mapRentToJsonResponse(r rent.Rent) RentResponse {
 		ID:            r.ID.String(),
 		BikeID:        r.Bike.String(),
 		Renter:        r.Renter.String(),
-		StartTime:     r.StartTime.Format(time.RFC3339),
+		Status:        r.Status.Value(),
+		StartTime:     r.StartTime.Format(isoFormat),
 		EndTime:       endTimeString,
 		StartLocation: mapLocationToJson(r.StartLocation),
 		EndLocation:   endLocationString,
 	}
 }
 
-func mapRentRequestToDomain(r RentRequest) rent.Request {
-	return rent.Request{
+func mapStartRequestToDomain(r StartRequest) rent.StartRequest {
+	return rent.StartRequest{
 		Bike:   uuid.MustParse(r.BikeID),
 		Renter: uuid.MustParse(r.Renter),
+	}
+}
+
+func mapStopRequestToDomain(request StopRequest) rent.StopRequest {
+	return rent.StopRequest{
+		UserID: request.UserID,
+		RentID: uuid.MustParse(request.RentID),
 	}
 }

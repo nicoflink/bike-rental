@@ -20,7 +20,10 @@ func main() {
 	log.Println("starting bike rental server")
 
 	// Init Repos
-	memoryRepo := memory.NewRepository(memory.WithSampleBikes(memory.SampleBikes))
+	memoryRepo := memory.NewRepository(
+		memory.WithSampleBikes(memory.SampleBikes),
+		memory.WithSampleRents(memory.SampleRents),
+	)
 
 	// Init Services
 	listService := list.NewService(memoryRepo)

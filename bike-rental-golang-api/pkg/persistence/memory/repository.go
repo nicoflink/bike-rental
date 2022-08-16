@@ -40,6 +40,14 @@ func WithSampleBikes(bikes []Bike) RepositoryOption {
 	}
 }
 
+func WithSampleRents(rents []rent.Rent) RepositoryOption {
+	return func(r *Repository) {
+		for _, ren := range rents {
+			r.rentals[ren.ID] = ren
+		}
+	}
+}
+
 func (r *Repository) GetAllBikes(_ context.Context, userID uuid.UUID) ([]list.Bike, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()

@@ -1,0 +1,37 @@
+<div class="bikeDetails" fxLayout="column" fxLayoutAlign="space-around" *ngIf="bike">
+    <div>
+        <p class="bikeHeader">Bike <<{{bike.name}}>>  🚲 </p>
+        <p class="status" >This bike is {{bike.rented ? "rented" : "for rent" }}</p>
+    </div>
+    <div *ngIf="!bike.rented && !hasAlreadyRent">
+        <div fxLayout="column">
+            <ol>
+                <li>Click on "Rent Bike"</li>
+                <li>Bike lock will unlock automatically</li>
+                <li>Adjust saddle height</li>
+            </ol>
+            <div fxLayout="row" fxLayoutAlign="end" >
+                <button 
+                    mat-flat-button 
+                    color="newColor"
+                    (click)="startRent()"
+                >Rent Bike</button>
+            </div>
+        </div>     
+    </div>
+    <div *ngIf="bike.returnable">
+        <div fxLayout="column">
+            <div class="rDetails" fxLayout="column" *ngIf="rentDetails">
+                <p><span><b>Start Time:</b></span> {{rentDetails.startTime}}</p>
+                <p><span><b>Start Location:</b></span> {{rentDetails.startLocation.latitude}}, {{rentDetails.startLocation.longitude}}</p>
+            </div>
+            <div fxLayout="row" fxLayoutAlign="end" >
+                <button 
+                    mat-flat-button 
+                    color="newColor"
+                    (click)="stopRent()"
+                >Return Bike</button>
+            </div>
+        </div>     
+    </div>
+  </div>

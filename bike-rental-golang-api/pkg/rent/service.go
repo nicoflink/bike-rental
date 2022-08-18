@@ -22,10 +22,12 @@ type Service struct {
 	repository Repository
 }
 
+// NewService returns a new rent service.
 func NewService(r Repository) *Service {
 	return &Service{repository: r}
 }
 
+// StartRent creates a new rent.
 func (s Service) StartRent(ctx context.Context, startRequest StartRequest) (Rent, error) {
 	const prefix = "rent.Service.StartRent"
 
@@ -58,6 +60,7 @@ func (s Service) StartRent(ctx context.Context, startRequest StartRequest) (Rent
 	return rCreated, nil
 }
 
+// StopRent stops a started rent.
 func (s Service) StopRent(ctx context.Context, stopRequest StopRequest) (Rent, error) {
 	const prefix = "rent.Service.StopRent"
 
@@ -87,6 +90,7 @@ func (s Service) StopRent(ctx context.Context, stopRequest StopRequest) (Rent, e
 	return rUpdated, nil
 }
 
+// GetStartedRents returns all rents of a user with status Started.
 func (s Service) GetStartedRents(ctx context.Context, req GetOpenRentsRequest) ([]Rent, error) {
 	return s.repository.GetRentByStatusAndRenterID(ctx, Started, req.UserID)
 }

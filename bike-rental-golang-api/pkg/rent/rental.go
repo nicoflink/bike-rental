@@ -8,8 +8,10 @@ import (
 	"github.com/nicoflink/bike-rental/pkg/geo"
 )
 
+// Status of the rent.
 type Status uint8
 
+// Value retuns the uint8 value of Status type.
 func (s Status) Value() uint8 {
 	return uint8(s)
 }
@@ -20,6 +22,9 @@ const (
 	Finished
 )
 
+// Rent provides all information about a rent.
+// EndTime and EndLocation are nil in case the rent is in status Started. Both values will be set after stopping the
+// rent.
 type Rent struct {
 	ID            uuid.UUID
 	Bike          uuid.UUID
@@ -45,6 +50,8 @@ type GetOpenRentsRequest struct {
 	UserID uuid.UUID
 }
 
+// NewRent creates a new rent.
+// ID, Status and StartTime will be automatically set.
 func NewRent(bikedID uuid.UUID, renter uuid.UUID, location geo.Coordinates) *Rent {
 	return &Rent{
 		ID:            uuid.New(),
@@ -56,6 +63,7 @@ func NewRent(bikedID uuid.UUID, renter uuid.UUID, location geo.Coordinates) *Ren
 	}
 }
 
+// StopRent stops the renting by setting status to Finished and by setting the EndTime as well as the EndLocation
 func (r *Rent) StopRent(renter uuid.UUID, endLocation geo.Coordinates) error {
 	if r.Renter != renter {
 		return errors.New("user not allowed to finish rent")

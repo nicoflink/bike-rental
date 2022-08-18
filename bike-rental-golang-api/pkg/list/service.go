@@ -17,14 +17,17 @@ type Service struct {
 	repository Repository
 }
 
+// NewService returns a new bike service.
 func NewService(r Repository) *Service {
 	return &Service{repository: r}
 }
 
+// GetAllBikes for the current user.
 func (s Service) GetAllBikes(ctx context.Context, userID uuid.UUID) ([]Bike, error) {
 	return s.repository.GetAllBikes(ctx, userID)
 }
 
+// UpdateBikePosition updates the position of the bike.
 func (s Service) UpdateBikePosition(ctx context.Context, userID uuid.UUID, locationUpdate BikeLocationUpdate) (Bike, error) {
 	const prefix = "list.Service.UpdateBikePosition"
 

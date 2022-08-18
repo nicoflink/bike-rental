@@ -5,7 +5,8 @@ import (
 	"net/http"
 )
 
-func Json(w http.ResponseWriter, v interface{}) {
+// ToJson renders a provided value v to a json response and send it.
+func ToJson(w http.ResponseWriter, v interface{}) {
 	js, err := json.Marshal(v)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

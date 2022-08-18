@@ -9,6 +9,7 @@ import (
 	"github.com/nicoflink/bike-rental/pkg/rent"
 )
 
+// mapLocationToJson maps coordinates to strings
 func mapLocationToJson(g geo.Coordinates) Coordinates {
 	return Coordinates{
 		Lat: fmt.Sprintf("%f", g.Lat),
@@ -16,6 +17,8 @@ func mapLocationToJson(g geo.Coordinates) Coordinates {
 	}
 }
 
+// mapRentsToJsonResponse maps domain rents to json response.
+// If the rent slice is empty, the response also returns an empty slice.
 func mapRentsToJsonResponse(r []rent.Rent) []RentResponse {
 	rents := make([]RentResponse, 0, len(r))
 
@@ -26,6 +29,7 @@ func mapRentsToJsonResponse(r []rent.Rent) []RentResponse {
 	return rents
 }
 
+// mapRentToJsonResponse maps a single domain rent to the JSON response.
 func mapRentToJsonResponse(r rent.Rent) RentResponse {
 	const isoFormat = time.RFC3339
 
@@ -52,6 +56,8 @@ func mapRentToJsonResponse(r rent.Rent) RentResponse {
 	}
 }
 
+// mapStartRequestToDomain maps json StartRequest to rent StartRequest.
+// As json request is already validated by the handler, MustParse of the uuid pkg can be used.
 func mapStartRequestToDomain(r StartRequest) rent.StartRequest {
 	return rent.StartRequest{
 		Bike:   uuid.MustParse(r.BikeID),
@@ -59,6 +65,9 @@ func mapStartRequestToDomain(r StartRequest) rent.StartRequest {
 	}
 }
 
+// mapStopRequestToDomain maps json StopRequest to rent StopRequest.
+// As json request is already validated by the handler, MustParse of the uuid pkg can be used.
+// The UserID of the json StopRequest is extracted by the middleware and therefor already validated.
 func mapStopRequestToDomain(request StopRequest) rent.StopRequest {
 	return rent.StopRequest{
 		UserID: request.UserID,
@@ -66,6 +75,8 @@ func mapStopRequestToDomain(request StopRequest) rent.StopRequest {
 	}
 }
 
+// mapGetRentRequestToDomain maps json GetRentRequest to rent GetOpenRentsRequest.
+// As json request is already validated by the handler, MustParse of the uuid pkg can be used.
 func mapGetRentRequestToDomain(request GetRentRequest) rent.GetOpenRentsRequest {
 	return rent.GetOpenRentsRequest{UserID: uuid.MustParse(request.UserID)}
 }

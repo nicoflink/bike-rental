@@ -2,21 +2,32 @@ package rents
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	e "github.com/nicoflink/bike-rental/pkg/http/rest/errors"
 	"github.com/nicoflink/bike-rental/pkg/http/rest/middleware"
 	"github.com/nicoflink/bike-rental/pkg/http/rest/ports"
 	"github.com/nicoflink/bike-rental/pkg/http/rest/render"
 )
 
+// handler is an internal struct providing different handler functions for the specific routes.
+// It is responsible to validate the incoming request and call the corresponding domain service.
 type handler struct {
 	service   ports.RentService
 	validator ports.Validator
 }
 
-func NewRentsRouter(rentService ports.RentService, validator ports.Validator) chi.Router {
+// NewRentsRouter returns a router for rents resource.
+func NewRentsRouter(rentService ports.RentService, validator ports.Validator) (chi.Router, error) {
+	if rentService == nil || validator == nil {
+		return nil, errors.New("NewRentsRouter dependencies are not fulfilled")
+	}
+
 	r := chi.NewRouter()
 
 	h := handler{
@@ -28,15 +39,18 @@ func NewRentsRouter(rentService ports.RentService, validator ports.Validator) ch
 	r.Post("/", h.startRent)
 	r.Patch("/{rentID}", h.stopRent)
 
-	return r
+	return r, nil
 }
 
+// startRent handles the request to start a rent.
 func (h handler) startRent(writer http.ResponseWriter, request *http.Request) {
+	const prefix = "rents.handler.startRent"
+
 	ctx := request.Context()
 
 	rBody := request.Body
 	if rBody == nil {
-		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(writer, e.ErrEmptyRequestBody, http.StatusBadRequest)
 
 		return
 	}
@@ -46,13 +60,13 @@ func (h handler) startRent(writer http.ResponseWriter, request *http.Request) {
 
 	var startRequest StartRequest
 	if err := jDecoder.Decode(&startRequest); err != nil {
-		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(writer, e.ErrParsingJson, http.StatusInternalServerError)
 
 		return
 	}
 
 	if err := h.validator.Struct(startRequest); err != nil {
-		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
 
 		return
 	}
@@ -61,24 +75,26 @@ func (h handler) startRent(writer http.ResponseWriter, request *http.Request) {
 
 	res, err := h.service.StartRent(ctx, domainRequest)
 	if err != nil {
+		log.Println(fmt.Sprintf("%s: ERROR - %v", prefix, err))
 		http.Error(writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 		return
 	}
 
-	render.Json(writer, mapRentToJsonResponse(res))
+	render.ToJson(writer, mapRentToJsonResponse(res))
 }
 
+// stopRent handles the request to stop a rent.
 func (h handler) stopRent(writer http.ResponseWriter, request *http.Request) {
+	const prefix = "rents.handler.stopRent"
+
 	ctx := request.Context()
-
 	userID := ctx.Value(middleware.UserIDKey).(uuid.UUID)
-
 	rentStringID := chi.URLParam(request, "rentID")
 
 	rBody := request.Body
 	if rBody == nil {
-		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(writer, e.ErrEmptyRequestBody, http.StatusBadRequest)
 
 		return
 	}
@@ -88,7 +104,7 @@ func (h handler) stopRent(writer http.ResponseWriter, request *http.Request) {
 
 	var stopRequest StopRequest
 	if err := jDecoder.Decode(&stopRequest); err != nil {
-		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(writer, e.ErrParsingJson, http.StatusInternalServerError)
 
 		return
 	}
@@ -97,7 +113,7 @@ func (h handler) stopRent(writer http.ResponseWriter, request *http.Request) {
 	stopRequest.RentID = rentStringID
 
 	if err := h.validator.Struct(stopRequest); err != nil {
-		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
 
 		return
 	}
@@ -106,20 +122,24 @@ func (h handler) stopRent(writer http.ResponseWriter, request *http.Request) {
 
 	res, err := h.service.StopRent(ctx, domainStopRequest)
 	if err != nil {
+		log.Println(fmt.Sprintf("%s: ERROR - %v", prefix, err))
 		http.Error(writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 		return
 	}
 
-	render.Json(writer, mapRentToJsonResponse(res))
+	render.ToJson(writer, mapRentToJsonResponse(res))
 }
 
+// getRents handles the request to get all started rents of a user.
 func (h handler) getRents(writer http.ResponseWriter, request *http.Request) {
+	const prefix = "rents.handler.getRents"
+
 	ctx := request.Context()
 
 	queryValues := request.URL.Query()
 	if len(queryValues) == 0 {
-		http.Error(writer, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+		http.Error(writer, e.ErrGetRentQuery, http.StatusBadRequest)
 
 		return
 	}
@@ -127,19 +147,13 @@ func (h handler) getRents(writer http.ResponseWriter, request *http.Request) {
 	status := queryValues.Get("status")
 	userID := queryValues.Get("userID")
 
-	if status == "" || userID == "" {
-		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadGateway)
-
-		return
-	}
-
 	req := GetRentRequest{
 		Status: status,
 		UserID: userID,
 	}
 
 	if err := h.validator.Struct(req); err != nil {
-		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
 
 		return
 	}
@@ -148,10 +162,11 @@ func (h handler) getRents(writer http.ResponseWriter, request *http.Request) {
 
 	res, err := h.service.GetStartedRents(ctx, domainGetRequest)
 	if err != nil {
+		log.Println(fmt.Sprintf("%s: ERROR - %v", prefix, err))
 		http.Error(writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 
 		return
 	}
 
-	render.Json(writer, mapRentsToJsonResponse(res))
+	render.ToJson(writer, mapRentsToJsonResponse(res))
 }

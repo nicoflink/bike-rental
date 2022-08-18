@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -16,6 +17,11 @@ import (
 	"github.com/nicoflink/bike-rental/pkg/rent"
 )
 
+const (
+	host = "localhost"
+	port = 8080
+)
+
 func main() {
 	log.Println("starting bike rental server")
 
@@ -25,21 +31,28 @@ func main() {
 		memory.WithSampleRents(memory.SampleRents),
 	)
 
+	log.Println("initialized memory repositories")
+
 	// Init Services
 	listService := list.NewService(memoryRepo)
 	rentService := rent.NewService(memoryRepo)
 
+	log.Println("initialized memory services")
+
 	validate := validator.New()
 
-	server := rest.NewServer(
-		"localhost",
-		8080,
+	server, err := rest.NewServer(
+		host,
+		port,
 		validate,
 		rest.DomainServices{
 			ListService: listService,
 			RentService: rentService,
 		},
 	)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	serverCtx, serverStop := context.WithCancel(context.Background())
 
@@ -81,6 +94,8 @@ func main() {
 			log.Printf("ERROR: %s", err)
 		}
 	}()
+
+	log.Println(fmt.Sprintf("server started on: %s:%d", host, port))
 
 	wg.Wait()
 }

@@ -21,4 +21,5 @@ type RentService interface {
 
 type Validator interface {
 	Struct(s interface{}) error
+	Var(field interface{}, tag string) error
 }

@@ -26,19 +26,33 @@ type Server struct {
 	httpServer httpServer
 }
 
-func NewServer(host string, port uint16, validator ports.Validator, dServices DomainServices) *Server {
+// NewServer creates a new server for REST API.
+// It defines the version of the API that are provided to the customer.
+func NewServer(host string, port uint16, validator ports.Validator, dServices DomainServices) (*Server, error) {
+	if host == "" || port == 0 || validator == nil {
+		return nil, errors.New("NewServer dependencies are not fulfilled")
+	}
+
 	r := chi.NewRouter()
 
-	r.Mount("/api/v1", NewV1Router(validator, dServices))
+	v1Router, err := NewV1Router(validator, dServices)
+	if err != nil {
+		return nil, fmt.Errorf("rest.NewServer: %w", err)
+	}
+
+	r.Mount("/api/v1", v1Router)
 
 	return &Server{httpServer: &http.Server{
 		Addr:         fmt.Sprintf("%s:%d", host, port),
 		Handler:      r,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
-	}}
+	}}, nil
 }
 
+// Serve starts serving the REST API.
+// It calls ListenAndServe of the underlying HTTP server and listen to the provided context for any interruption.
+// If an error occurs other than http.ErrServerClosed then the error will be returned.
 func (s *Server) Serve(context context.Context) error {
 	var err error
 
@@ -64,6 +78,7 @@ func (s *Server) Serve(context context.Context) error {
 	}
 }
 
+// Shutdown shuts down the underlying http server.
 func (s *Server) Shutdown(ctx context.Context) error {
 	log.Println("shutting down http server gracefully")
 

@@ -11,6 +11,7 @@ import (
 	"github.com/nicoflink/bike-rental/pkg/rent"
 )
 
+// Repository is the in memory storage for bikes and rentals.
 type Repository struct {
 	lock    sync.RWMutex
 	bikes   map[uuid.UUID]Bike
@@ -19,6 +20,7 @@ type Repository struct {
 
 type RepositoryOption func(r *Repository)
 
+// NewRepository initializes a new in memory storage with optional options.
 func NewRepository(options ...RepositoryOption) *Repository {
 	r := &Repository{
 		bikes:   make(map[uuid.UUID]Bike),
@@ -32,6 +34,7 @@ func NewRepository(options ...RepositoryOption) *Repository {
 	return r
 }
 
+// WithSampleBikes is the option to set initial sample bikes.
 func WithSampleBikes(bikes []Bike) RepositoryOption {
 	return func(r *Repository) {
 		for _, b := range bikes {
@@ -40,6 +43,7 @@ func WithSampleBikes(bikes []Bike) RepositoryOption {
 	}
 }
 
+// WithSampleRents is the option to set initial sample rents.
 func WithSampleRents(rents []rent.Rent) RepositoryOption {
 	return func(r *Repository) {
 		for _, ren := range rents {
@@ -48,6 +52,7 @@ func WithSampleRents(rents []rent.Rent) RepositoryOption {
 	}
 }
 
+// GetAllBikes returns all bike mapped to list bike.
 func (r *Repository) GetAllBikes(_ context.Context, userID uuid.UUID) ([]list.Bike, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
@@ -61,6 +66,7 @@ func (r *Repository) GetAllBikes(_ context.Context, userID uuid.UUID) ([]list.Bi
 	return bikes, nil
 }
 
+// GetBikeByID is a lookup for the bike with the provided bikeID and mapped to rent bike.
 func (r *Repository) GetBikeByID(_ context.Context, bikeID uuid.UUID) (rent.Bike, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
@@ -73,6 +79,7 @@ func (r *Repository) GetBikeByID(_ context.Context, bikeID uuid.UUID) (rent.Bike
 	return mapBikeToRentBike(b), nil
 }
 
+// GetListBikeByID is a lookup for the bike with the provided bikeID and mapped to list bike.
 func (r *Repository) GetListBikeByID(_ context.Context, userID uuid.UUID, bikeID uuid.UUID) (list.Bike, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
@@ -85,6 +92,7 @@ func (r *Repository) GetListBikeByID(_ context.Context, userID uuid.UUID, bikeID
 	return mapBikeToListBike(b, userID), nil
 }
 
+// GetBikeByUserID is a lookup for the bike of a specific user.
 func (r *Repository) GetBikeByUserID(_ context.Context, userID uuid.UUID) (rent.Bike, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
@@ -98,6 +106,8 @@ func (r *Repository) GetBikeByUserID(_ context.Context, userID uuid.UUID) (rent.
 	return rent.Bike{}, persistence.ErrMissingResource
 }
 
+// UpdateBike updates a list bike.
+// Only Name and Location can be updated with this function.
 func (r *Repository) UpdateBike(_ context.Context, b list.Bike) (list.Bike, error) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
@@ -115,6 +125,7 @@ func (r *Repository) UpdateBike(_ context.Context, b list.Bike) (list.Bike, erro
 	return b, nil
 }
 
+// GetRentByID is a lookup for the rent with the provided ID.
 func (r *Repository) GetRentByID(_ context.Context, rentID uuid.UUID) (rent.Rent, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
@@ -127,6 +138,7 @@ func (r *Repository) GetRentByID(_ context.Context, rentID uuid.UUID) (rent.Rent
 	return ren, nil
 }
 
+// GetRentByStatusAndRenterID is a lookup for the rent with the provided status and renter.
 func (r *Repository) GetRentByStatusAndRenterID(_ context.Context, status rent.Status, renter uuid.UUID) ([]rent.Rent, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
@@ -142,6 +154,8 @@ func (r *Repository) GetRentByStatusAndRenterID(_ context.Context, status rent.S
 	return rents, nil
 }
 
+// CreateRentAndUpdateBike creates a new rent and updates a bike in terms of rented and rentedByUser.
+// Creation and Update are done in a single function as it should be handled as a transaction.
 func (r *Repository) CreateRentAndUpdateBike(_ context.Context, ren rent.Rent, b rent.Bike) (rent.Rent, error) {
 	const prefix = "memory.Repository.CreateRentAndUpdateBike"
 
@@ -163,6 +177,8 @@ func (r *Repository) CreateRentAndUpdateBike(_ context.Context, ren rent.Rent, b
 	return ren, nil
 }
 
+// UpdateRentAndUpdateBike updates a rent and a bike in terms of rented and rentedByUser.
+// Both updated are done in a single function as it should be handled as a transaction.
 func (r *Repository) UpdateRentAndUpdateBike(_ context.Context, ren rent.Rent, b rent.Bike) (rent.Rent, error) {
 	const prefix = "memory.Repository.UpdateRentAndUpdateBike"
 

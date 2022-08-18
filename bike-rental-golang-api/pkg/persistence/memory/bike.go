@@ -5,6 +5,7 @@ import (
 	"github.com/nicoflink/bike-rental/pkg/geo"
 )
 
+// Bike representation in the data layer.
 type Bike struct {
 	ID           uuid.UUID
 	Name         string

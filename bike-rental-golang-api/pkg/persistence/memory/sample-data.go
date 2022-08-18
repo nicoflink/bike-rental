@@ -8,11 +8,13 @@ import (
 	"github.com/nicoflink/bike-rental/pkg/rent"
 )
 
+// uuidToPointer is a helper function to convert a UUID to its pointer.
 func uuidToPointer(u uuid.UUID) *uuid.UUID {
 	return &u
 }
 
 var (
+	// SampleBikes is sample data set for bikes.
 	SampleBikes = []Bike{
 		// Bikes available
 		{
@@ -62,6 +64,7 @@ var (
 			RentedByUser: uuidToPointer(uuid.MustParse("d2946438-030d-4350-ae5c-e5b4f8dc402d")),
 		},
 	}
+	// SampleRents is sample data set for rents.
 	SampleRents = []rent.Rent{
 		{
 			ID:        uuid.MustParse("6733d0dc-4138-4bb8-a68f-79751674fc96"),

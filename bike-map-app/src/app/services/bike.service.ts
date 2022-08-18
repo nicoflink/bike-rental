@@ -16,7 +16,7 @@ export class BikeService {
   constructor(private http: HttpClient) { }
 
   /**
-   * getBikes returns all bikes stored in the backend. If no bikes are stored an empty list is returned.
+   * getBikes returns all bikes stored in the backend. If no bikes are stored an empty bike is returned.
    * @returns List of all bikes
    */
   getBikes(): Observable<Bike[]> {
@@ -24,8 +24,8 @@ export class BikeService {
   }
 
   /**
-   * updateLocation is used to update the location of the current bike after it has been moved (dragging the marker). 
-   * @param locationUpdate 
+   * updateLocation is used to update the location of the current bike after it has been moved (dragging the marker).
+   * @param locationUpdate
    * @returns updated Bike
    */
   updateLocation(locationUpdate: BikeLocationUpdate):Observable<Bike> {

@@ -1,0 +1,27 @@
+<div class="mapsContainer" *ngIf="apiLoaded | async">
+  <google-map 
+    width="100%" 
+    height="100%"
+    [center]="center"
+    [zoom]="zoom"
+  >
+
+  <map-marker 
+    #marker="mapMarker"
+    *ngFor="let bike of bikes; trackBy: trackByRentStatus"
+    [options]="bike | bike2Marker"
+    (mapClick)="openInfoWindow(marker, bike)"
+    (mapDragend)="updateBikeLocation($event, bike.id)"
+  ></map-marker>
+
+  <map-info-window>
+    <app-bike-details
+      [bike]="selectedBike"
+      [hasAlreadyRent]="currentRent"
+      (rentChange)="handleBikeChange($event)"
+      (forceReload)="getBikes()"
+    ></app-bike-details>
+  </map-info-window>
+
+</google-map>
+</div>

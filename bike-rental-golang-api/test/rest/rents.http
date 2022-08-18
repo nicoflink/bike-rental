@@ -1,0 +1,52 @@
+### Post Rents - Happy Case
+POST http://localhost:8080/api/v1/rents
+Accept: application/json
+Content-Type: application/json
+SessionID: d3a2d794-e63d-46c4-9378-8deea0f3f21c
+
+{
+  "bikeID": "c07e1166-4971-437a-879b-44a11c8f45b2",
+  "userID": "d3a2d794-e63d-46c4-9378-8deea0f3f21c"
+}
+
+### Post Rents - Error: User already rented a bike
+POST http://localhost:8080/api/v1/rents
+Accept: application/json
+Content-Type: application/json
+SessionID: {{userID}}
+
+{
+  "bikeID": "4aec8d9c-938e-49bb-b301-944fa991319c",
+  "userID": "{{userID}}"
+}
+
+### Post Rents - Error: User tries to rent bike that is already rented
+POST http://localhost:8080/api/v1/rents
+Accept: application/json
+Content-Type: application/json
+SessionID: f0163a02-b13f-46d0-b2b5-b22f54b74a86
+
+{
+  "bikeID": "a85ea086-72f3-4f4d-b25d-83a43e995206",
+  "userID": "f0163a02-b13f-46d0-b2b5-b22f54b74a86"
+}
+
+### Get Rent - Happy Case: Rent available
+GET http://localhost:8080/api/v1/rents?status=1&userID=10debbdb-1a92-4128-bdb0-cc381ea5585f
+Accept: application/json
+SessionID: {{userID}}
+
+### Get Rent - Happy Case: Rent empty
+GET http://localhost:8080/api/v1/rents?status=1&userID=0ccb39a9-f07d-48a1-acc1-0170cc9d9597
+Accept: application/json
+SessionID: 0ccb39a9-f07d-48a1-acc1-0170cc9d9597
+
+### Stop Rent - Happy Case
+PATCH http://localhost:8080/api/v1/rents/8772940e-4f2a-454d-8ab2-b3a3b935ca7c
+Accept: application/json
+Content-Type: application/json
+SessionID: d2946438-030d-4350-ae5c-e5b4f8dc402d
+
+{
+  "status": 2
+}

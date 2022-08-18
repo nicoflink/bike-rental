@@ -1,0 +1,17 @@
+### List Bikes - Happy Case
+GET http://localhost:8080/api/v1/bikes
+Accept: application/json
+SessionID: {{userID}}
+
+### Update Bike Location - Happy Case
+PATCH http://localhost:8080/api/v1/bikes/67123f76-8751-463c-b72a-23abe633a246
+Accept: application/json
+Content-Type: application/json
+SessionID: {{userID}}
+
+{
+  "location": {
+    "latitude": 50.115357545218544,
+    "longitude": 8.671647627166971
+  }
+}

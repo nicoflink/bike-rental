@@ -6,7 +6,7 @@ In order to run the app the rest-api server as well as the angular needs to be s
 Maps is required. The application is tested with:
 - node v18.7.0
 - npm v8.15.0
-- go 1.6
+- go 1.16
 
 ## Start the REST-API Server
 
